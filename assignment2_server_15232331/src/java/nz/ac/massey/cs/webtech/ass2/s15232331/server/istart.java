@@ -11,7 +11,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -31,15 +30,8 @@ public class istart extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");  
-            HttpSession session = request.getSession();
-            // Creates a nerw game board
-            String[][] myGameBoard = {
-                {"-", "-", "-"},
-                {"-", "-", "-"},
-                {"-", "-", "-"}
-            };                 
-            request.getSession().setAttribute("board", myGameBoard);
+        Board myGameBoard = new Board("user");
+        request.getSession().setAttribute("board", myGameBoard);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

@@ -17,7 +17,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -37,74 +36,71 @@ public class state extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-            HttpSession session = request.getSession(false);
-            if(session != null) {
-                // Initializes URL value
-                Enumeration paraObj = request.getParameterNames();
-                String paraName = paraObj.nextElement().toString();
-                String paraValue = request.getParameter(paraName);
-                
-                String[][] myGameBoard = (String[][])request.getSession().getAttribute("board");
-                
-                // Checks whether png or txt has been requested
-                if(paraValue.equals("txt")) {
-                    response.setContentType("text/html;charset=UTF-8");
-                    PrintWriter out = response.getWriter();
-                    StringBuilder sb = new StringBuilder();
-                    int i = 0, j = 0;
-                    while(j < 9) {
-                        if(myGameBoard[i][j % 3].equals("-")){                                                    
-                            sb.append("_");
-                        } else {
-                            sb.append(myGameBoard[i][j % 3]);                            
-                        }
-                        sb.append(" ");
-                        ++j;
-                        if(j % 3 == 0) {
-                            sb.append("\n");
-                            ++i;
-                        }                    
-                    }
-                    out.println(sb.toString());
-                    
-                } else {
-                    response.setContentType("image/png");                
-                    ServletOutputStream out = response.getOutputStream();
-
-                    BufferedImage image = new BufferedImage(100,100,BufferedImage.TYPE_INT_RGB);
-                    Graphics2D g = image.createGraphics();
-
-                    StringBuilder sb = new StringBuilder();
-                    int i = 0, j = 0;
-                    while(j < 9) {
-                        if(myGameBoard[i][j % 3].equals("-")){                                                    
-                            sb.append("_");
-                        } else {
-                            sb.append(myGameBoard[i][j % 3]);                            
-                        }
-                        sb.append(" ");
-                        ++j;
-                        if(j % 3 == 0) {
-                            g.setColor(Color.white);
-                            g.drawString(sb.toString(), 0, 10 + (10 * i));
-                            sb = new StringBuilder();                        
-                            ++i;
-                        }                    
-                    }
-
-                    javax.imageio.ImageIO.write(image, "png", out);
-
-                    g.dispose();
-                    out.close();
-                }                
-            } else {
+        
+        try {
+            // Parse game board from request
+            Board myGameBoard = (Board)request.getSession().getAttribute("board");
+            String[][] myGameGrid = myGameBoard.getMatrix();
+            
+            // Get user X coordinates from request
+            Enumeration paraObj = request.getParameterNames();
+            String paraName = paraObj.nextElement().toString();
+            String paraValue = request.getParameter(paraName);
+            
+            if(paraValue.equals("txt")) {
                 response.setContentType("text/html;charset=UTF-8");
                 PrintWriter out = response.getWriter();
-                out.println("404 - Not an active session.");
+                StringBuilder sb = new StringBuilder();
+                int i = 0, j = 0;
+                while(j < 9) {
+                    if(myGameGrid[i][j % 3].equals("-")){                                                    
+                        sb.append("_");
+                    } else {
+                        sb.append(myGameGrid[i][j % 3]);                            
+                    }
+                    sb.append(" ");
+                    ++j;
+                    if(j % 3 == 0) {
+                        sb.append("\n");
+                        ++i;
+                    }                    
+                }
+                out.println(sb.toString());
+            } else {
+                response.setContentType("image/png");                
+                ServletOutputStream out = response.getOutputStream();
+
+                BufferedImage image = new BufferedImage(100,100,BufferedImage.TYPE_INT_RGB);
+                Graphics2D g = image.createGraphics();
+
+                StringBuilder sb = new StringBuilder();
+                int i = 0, j = 0;
+                while(j < 9) {
+                    if(myGameGrid[i][j % 3].equals("-")){                                                    
+                        sb.append("_");
+                    } else {
+                        sb.append(myGameGrid[i][j % 3]);                            
+                    }
+                    sb.append(" ");
+                    ++j;
+                    if(j % 3 == 0) {
+                        g.setColor(Color.white);
+                        g.drawString(sb.toString(), 0, 10 + (10 * i));
+                        sb = new StringBuilder();                        
+                        ++i;
+                    }                    
+                }
+                
+                javax.imageio.ImageIO.write(image, "png", out);
+
+                g.dispose();
                 out.close();
             }
-        
-        
+            
+            
+        } catch (NullPointerException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

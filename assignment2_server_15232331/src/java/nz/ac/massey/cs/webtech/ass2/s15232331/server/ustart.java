@@ -7,13 +7,11 @@ package nz.ac.massey.cs.webtech.ass2.s15232331.server;
 
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -33,22 +31,8 @@ public class ustart extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try(PrintWriter out = response.getWriter()) {
-            HttpSession session = request.getSession(false);
-            if(session != null) {
-                // Creates a nerw game board
-                String[][] myGameBoard = {
-                    {"-", "-", "-"},
-                    {"-", "O", "-"},
-                    {"-", "-", "-"}
-                };                 
-                request.getSession().setAttribute("board", myGameBoard);
-            } else {
-                out.println("404 - Not an active session.");
-            }
-            out.close();
-        }
+        Board myGameBoard = new Board("comp");
+        request.getSession().setAttribute("board", myGameBoard);  
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

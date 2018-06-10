@@ -12,7 +12,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -56,7 +55,17 @@ public class won extends HttpServlet {
         } else if(gameBoard[0][2].equals("O") && gameBoard[1][1].equals("O") && gameBoard[2][0].equals("O")) {
             return "Computer";
         }
-        return "None";
+        int i = 0, j = 0;
+        while(j < 9) {
+            if(gameBoard[i][j % 3].equals("-")) {
+                return "None";
+            }
+            ++j;
+            if(j %3 == 0) {
+                ++i;
+            }
+        }
+        return "Draw";
     }
 
     /**
@@ -71,15 +80,15 @@ public class won extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            HttpSession session = request.getSession(false);
-            if(session != null) {
-                String[][] myGameBoard = (String[][])request.getSession().getAttribute("board");
-                out.println(winnerEngine(myGameBoard));
-            } else {
-                out.println("404 - Active game not found.");
-            }
-            out.close();
+        try {
+            // Parse game board from request
+            Board myGameBoard = (Board)request.getSession().getAttribute("board");
+            String[][] myGameGrid = myGameBoard.getMatrix();
+            PrintWriter out = response.getWriter();
+            out.println(winnerEngine(myGameBoard.getMatrix()));
+            
+        } catch (NullPointerException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 

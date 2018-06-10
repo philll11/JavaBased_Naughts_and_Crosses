@@ -12,7 +12,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -33,29 +32,28 @@ public class possiblemoves extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            HttpSession session = request.getSession(false);
-            if(session != null) {
-                String[][] myGameBoard = (String[][])request.getSession().getAttribute("board");
-                StringBuilder sb = new StringBuilder("");
-                int i = 0, j = 0;
-                while(j < 9) {
-                    if(myGameBoard[i][j % 3].equals("-")) {
-                        sb.append(i);
-                        sb.append(",");
-                        sb.append(j % 3);                        
-                        sb.append("\n");
-                    }
-                    ++j;
-                    if(j % 3 == 0) {
-                        ++i;
-                    }
+        try {
+            Board myGameBoard = (Board)request.getSession().getAttribute("board");
+            String[][] myGameGrid = myGameBoard.getMatrix();
+
+            StringBuilder sb = new StringBuilder("");
+            int i = 0, j = 0;
+            while(j < 9) {
+                if(myGameGrid[i][j % 3].equals("-")) {
+                    sb.append(j % 3);
+                    sb.append(",");
+                    sb.append(i);               
+                    sb.append("\n");
                 }
-                out.println(sb.toString());                
-            } else {
-                out.println("404 - Active game not found.");
+                ++j;
+                if(j % 3 == 0) {
+                    ++i;
+                }
             }
-            out.close();
+            PrintWriter out = response.getWriter();
+            out.println(sb.toString());
+        } catch (NullPointerException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 

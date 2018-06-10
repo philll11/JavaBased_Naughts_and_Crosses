@@ -6,14 +6,13 @@
 package nz.ac.massey.cs.webtech.ass2.s15232331.server;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -34,53 +33,48 @@ public class move extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try(PrintWriter out = response.getWriter()) {
-            HttpSession session = request.getSession(false);            
-            if(session != null) {
-                // Initializes URL values
-                Enumeration paraObj = request.getParameterNames();
-                String paraName = paraObj.nextElement().toString();
-                String paraValue = request.getParameter(paraName);
-                
-                // Checks whether user input is correct
-                if(paraValue.matches("^[x]{1}[1-3]{1}[y]{1}[1-3]{1}$")) {   
-                    // Parse user input
-                    int newX = Character.getNumericValue(paraValue.charAt(1)) - 1;
-                    int newY = Character.getNumericValue(paraValue.charAt(3)) - 1;
-                    
-                    String[][] myGameBoard = (String[][])request.getSession().getAttribute("board");
-                    
-                    // Checks whether grid has been previously selected
-                    if (myGameBoard[newY][newX].equals("-")) {
-                        myGameBoard[newY][newX] = "X";                        
-                        
-                        int j = 0, i = 0;
-                        boolean state = false;
-                        while(j < 9) {
-                            if(myGameBoard[i][j % 3].equals("-")) {
-                                myGameBoard[i][j % 3] = "O";
-                                state = true;
-                                break;
-                            }
-                            ++j;
-                            if(j % 3 == 0) {
-                                ++i;
-                            }
+        try {
+            // Parse game board from request
+            Board myGameBoard = (Board)request.getSession().getAttribute("board");
+            String[][] myGameGrid = myGameBoard.getMatrix();
+
+            // Get user X coordinates from request
+            Enumeration paraObj = request.getParameterNames();
+            String paraName = paraObj.nextElement().toString();
+            String paraValue = request.getParameter(paraName);
+
+            // Checks whether the coordinates are between 1 and 3
+            if(paraValue.matches("^[x]{1}[0-2]{1}[y]{1}[0-2]{1}$")) {
+
+                // Parses them from string to int
+                int x = Character.getNumericValue(paraValue.charAt(1));
+                int y = Character.getNumericValue(paraValue.charAt(3));
+                if (myGameGrid[y][x].equals("-")) {
+                    myGameBoard.applyPosition("X", x, y);                      
+
+                    // Places computer position
+                    int j = 0, i = 0;
+                    while(j < 9) {
+                        if(myGameGrid[i][j % 3].equals("-")) {
+                            myGameBoard.applyPosition("O", j % 3, i); 
+                            break;
                         }
-                        if(state == false) {
-                            // There are no more moves left to play
+                        ++j;
+                        if(j % 3 == 0) {
+                            ++i;
                         }
-                        request.getSession().setAttribute("board", myGameBoard);
-                    } else {
-                        out.println("400 Bad Request");
                     }
+                    request.getSession().setAttribute("board", myGameBoard);
                 } else {
-                    out.println("400 Bad Request");
-                }
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                } 
             } else {
-                out.println("404 - Not an active session.");
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
-            out.close();
+        } catch (NullPointerException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        } catch (NoSuchElementException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 
